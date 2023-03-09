@@ -1,37 +1,81 @@
-import {useNavigation} from '@react-navigation/native';
+// import {useNavigation} from '@react-navigation/native';
 import moment from 'moment';
 import React, {useEffect, useState} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import configurations from '../../constants';
-import {fetchSignatureRequest} from '../../helpers/SignatureRequestApiRequests';
+import {
+  fetchDocumentList,
+  uploadDocumentApi,
+} from '../../helpers/DocumentApiRequests';
+import DocumentPicker from 'react-native-document-picker';
 
-const SignatureRequestScreen = () => {
-  const [requests, setRequests] = useState([]),
-    navigation = useNavigation();
+const DocumentsScreen = () => {
+  const [documents, setDocuments] = useState([]);
+  // navigation = useNavigation();
   useEffect(() => {
     getSignatureRequests();
   }, []);
 
   const getSignatureRequests = async () => {
-    const data = await fetchSignatureRequest();
-    setRequests(data);
+    const data = await fetchDocumentList();
+    setDocuments(data);
+  };
+
+  const uploadDocument = async pdfFile => {
+    const formdata = new FormData();
+    formdata.append('name', pdfFile.name);
+    formdata.append('document', pdfFile);
+    await uploadDocumentApi(formdata);
+    await getSignatureRequests();
+  };
+
+  const pickDocument = async () => {
+    const pdfFile = await DocumentPicker.pickSingle({
+      type: 'application/pdf',
+    });
+    if (pdfFile && pdfFile.type === 'application/pdf') {
+      Alert.alert(
+        'Upload document',
+        `Do you want to upload "${pdfFile.name}" document? `,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Upload',
+            onPress: () => uploadDocument(pdfFile),
+          },
+        ],
+      );
+    }
   };
 
   return (
     <View style={Styles.container}>
       <FlatList
-        data={requests}
+        data={documents}
         renderItem={({item}) => (
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('Signature Request Detail', {
-                signature_request_id: item.id,
-              })
-            }
+            // onPress={() =>
+            //   navigation.navigate('Signature Request Detail', {
+            //     signature_request_id: item.id,
+            //   })
+            // }
             activeOpacity={0.5}
             style={Styles.listItemContainer}>
-            <Text style={Styles.listItemText}>
-              {item.signature_request_title}
+            <Text
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              style={Styles.listItemText}>
+              {item.name}
             </Text>
             <Text style={Styles.listItemDate}>
               {moment(item.created_at).format('DD/MMM/YYYY - hh:mm a')}
@@ -42,10 +86,10 @@ const SignatureRequestScreen = () => {
         ItemSeparatorComponent={<View style={Styles.divider} />}
       />
       <TouchableOpacity
-        onPress={() => navigation.navigate('Documents')}
+        onPress={pickDocument}
         activeOpacity={0.6}
         style={Styles.floatingButton}>
-        <Text style={Styles.floatingButtonText}>Create Request</Text>
+        <Text style={Styles.floatingButtonText}>or add new document</Text>
       </TouchableOpacity>
     </View>
   );
@@ -64,8 +108,10 @@ const Styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     color: configurations.theme.textColor,
+    gap: 10,
   },
   listItemText: {
+    flex: 1,
     fontSize: 20,
     fontWeight: '500',
     color: configurations.theme.textColor,
@@ -94,4 +140,4 @@ const Styles = StyleSheet.create({
   },
 });
 
-export default SignatureRequestScreen;
+export default DocumentsScreen;

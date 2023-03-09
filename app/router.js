@@ -5,6 +5,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import SignatureRequestScreen from './screens/signatureRequests';
 import configurations from './constants';
 import SignatureRequestDetailScreen from './screens/signatureRequestDetail';
+import DocumentsScreen from './screens/documents';
 const RoutesData = [
   {
     component: SignatureRequestScreen,
@@ -15,6 +16,11 @@ const RoutesData = [
     component: SignatureRequestDetailScreen,
     name: 'Signature Request Detail',
     options: {title: 'Signature Request Detail'},
+  },
+  {
+    component: DocumentsScreen,
+    name: 'Documents',
+    options: {title: 'Select document'},
   },
 ];
 const Stack = createNativeStackNavigator();
